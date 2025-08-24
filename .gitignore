@@ -8,5 +8,4 @@ __pycache__/
 **/__pycache__/
 flake8.ini
 black.ini
-migrations/
 staticfiles/
