@@ -1,0 +1,12 @@
+.env
+env/
+db.sqlite3
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+**/__pycache__/
+flake8.ini
+black.ini
+migrations/
+staticfiles/
