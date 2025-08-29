@@ -51,7 +51,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         password = self.validated_data["password"]
         username = self.generate_username(email)
 
-        user = User(username=username, email=email, is_active=True)
+        user = User(username=username, email=email, is_active=False)
         user.set_password(password)
         user.save()
 

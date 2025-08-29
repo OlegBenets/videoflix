@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 @job("default", timeout=300)
-def send_activation_email(user_id, uid, token):
+def send_activation_email(user_id, uid, token, *args, **kwargs):
     """
     Send an account activation email to the user.
     """
