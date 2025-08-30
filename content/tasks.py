@@ -29,7 +29,7 @@ def generate_thumbnail(video_id):
         ]
 
         subprocess.run(cmd, check=True)
-        video.thumbnail_url = os.path.join(settings.MEDIA_URL, "thumbnails", f"{video.id}.jpg")
+        video.thumbnail_url = f"http://127.0.0.1:8000{settings.MEDIA_URL}thumbnails/{video.id}.jpg"
         video.save()
         logger.info(f"Thumbnail generated for video id={video_id}")
 
