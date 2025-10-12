@@ -6,10 +6,11 @@ echo "Warte auf PostgreSQL auf $DB_HOST:$DB_PORT..."
 
 # -q für "quiet" (keine Ausgabe außer Fehlern)
 # Die Schleife läuft, solange pg_isready *nicht* erfolgreich ist (Exit-Code != 0)
-while ! pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -q; do
-  echo "PostgreSQL ist nicht erreichbar - schlafe 1 Sekunde"
+until pg_isready "$DATABASE_URL"; do
+  echo "Warte auf PostgreSQL..."
   sleep 1
 done
+
 
 echo "PostgreSQL ist bereit - fahre fort..."
 
