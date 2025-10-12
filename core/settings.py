@@ -122,19 +122,24 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv("REDIS_URL", default="redis://redis:6379/1"),
-        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
-        "KEY_PREFIX": "videoflix",
+        "LOCATION": os.getenv("REDIS_LOCATION", default="redis://redis:6379/1"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        },
+        "KEY_PREFIX": "videoflix"
     }
 }
 
 RQ_QUEUES = {
-    "default": {
-        "URL": os.getenv("REDIS_URL", "redis://localhost:6379/0"),
-        "DEFAULT_TIMEOUT": 900,
-        "REDIS_CLIENT_KWARGS": {},
+    'default': {
+        'HOST': os.getenv("REDIS_HOST", default="redis"),
+        'PORT': os.getenv("REDIS_PORT", default=6379),
+        'DB': os.getenv("REDIS_DB", default=0),
+        'DEFAULT_TIMEOUT': 900,
+        'REDIS_CLIENT_KWARGS': {},
     },
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
