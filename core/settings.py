@@ -27,11 +27,9 @@ if DEBUG:
 else:
     SECRET_KEY = os.getenv("SECRET_KEY")
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", default="localhost").split(",")
+ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost").split(",")]
 
-CSRF_TRUSTED_ORIGINS = os.getenv(
-    "CSRF_TRUSTED_ORIGINS", default="http://localhost:5500"
-).split(",")
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", default="http://localhost:5500").split(",")]
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5500",
