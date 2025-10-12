@@ -2,6 +2,7 @@
 
 set -e
 
+
 # Deine originalen Befehle (ohne wait_for_db)
 python manage.py collectstatic --noinput
 python manage.py makemigrations
