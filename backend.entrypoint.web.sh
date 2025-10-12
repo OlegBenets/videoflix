@@ -2,8 +2,6 @@
 
 set -e
 
-echo "Warte auf PostgreSQL auf $DB_HOST:$DB_PORT..."
-
 # Deine originalen Befehle (ohne wait_for_db)
 python manage.py collectstatic --noinput
 python manage.py makemigrations

@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
+import dj_database_url
 
 load_dotenv()
 
@@ -109,14 +110,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", default="videoflix_db"),
-        "USER": os.getenv("DB_USER", default="videoflix_user"),
-        "PASSWORD": os.getenv("DB_PASSWORD", default="supersecretpassword"),
-        "HOST": os.getenv("DB_HOST", default="db"),
-        "PORT": os.getenv("DB_PORT", default=5432),
-    }
+    "default": dj_database_url.config(default=os.getenv("DATABASE_URL"))
 }
 
 CACHES = {
