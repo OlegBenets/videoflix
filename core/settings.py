@@ -33,13 +33,13 @@ ALLOWED_HOSTS = [host.strip() for host in os.getenv(
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv(
     "CSRF_TRUSTED_ORIGINS",
-    "https://videoflix-stage-8babf0a27cf2.herokuapp.com,http://localhost:4200"
+    "http://videoflix-stage-8babf0a27cf2.herokuapp.com,http://localhost:4200"
 ).split(",")]
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:4200",
     "http://localhost:4200",
-    "https://videoflix-stage-8babf0a27cf2.herokuapp.com",
+    "http://videoflix-stage-8babf0a27cf2.herokuapp.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -200,5 +200,3 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "BLACKLIST_AFTER_ROTATION": True,
 }
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
