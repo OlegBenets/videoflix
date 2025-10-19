@@ -130,9 +130,7 @@ CACHES = {
 
 RQ_QUEUES = {
     'default': {
-        'HOST': os.getenv("REDIS_HOST", default="redis"),
-        'PORT': os.getenv("REDIS_PORT", default=6379),
-        'DB': os.getenv("REDIS_DB", default=0),
+        'URL': os.getenv("REDIS_URL"),
         'DEFAULT_TIMEOUT': 900,
         'REDIS_CLIENT_KWARGS': {},
     },
