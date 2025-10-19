@@ -120,22 +120,18 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.getenv("REDIS_LOCATION", default="redis://redis:6379/1"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
-        },
-        "KEY_PREFIX": "videoflix"
+        "LOCATION": os.getenv("REDISCLOUD_URL"),
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": "videoflix",
     }
 }
 
 RQ_QUEUES = {
     "default": {
-        "URL":  os.getenv("REDISCLOUD_URL"),
+        "URL": os.getenv("REDISCLOUD_URL"),
         "DEFAULT_TIMEOUT": 900,
         "ASYNC": True,
-        "REDIS_CLIENT_KWARGS": {
-            "decode_responses": True,
-        },
+        "REDIS_CLIENT_KWARGS": {"decode_responses": True},
     }
 }
 
