@@ -129,15 +129,15 @@ CACHES = {
 }
 
 RQ_QUEUES = {
-    'default': {
-        'HOST': os.getenv("REDIS_HOST", default="redis"),
-        'PORT': os.getenv("REDIS_PORT", default=6379),
-        'DB': os.getenv("REDIS_DB", default=0),
-        'DEFAULT_TIMEOUT': 900,
-        'REDIS_CLIENT_KWARGS': {},
-    },
+    "default": {
+        "URL":  os.getenv("REDISCLOUD_URL"),
+        "DEFAULT_TIMEOUT": 900,
+        "ASYNC": True,
+        "REDIS_CLIENT_KWARGS": {
+            "decode_responses": True,
+        },
+    }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
