@@ -33,14 +33,8 @@ ALLOWED_HOSTS = [host.strip() for host in os.getenv(
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv(
     "CSRF_TRUSTED_ORIGINS",
-    "https://videoflix-stage-8babf0a27cf2.herokuapp.com,http://localhost:4200"
+    "https://videoflix.oleg-benets.dev,http://localhost:4200"
 ).split(",")]
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://videoflix-stage-8babf0a27cf2.herokuapp.com",
-    "http://localhost:4200",
-    "http://127.0.0.1:4200",
-]
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -54,8 +48,10 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", default="noreply@videoflix.local"
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 
-FRONTEND_URL="http://127.0.0.1:5500"
-
+if DEBUG:
+    FRONTEND_URL = "http://127.0.0.1:5500"
+else:
+    FRONTEND_URL = "https://videoflix.oleg-benets.dev"
     
 INSTALLED_APPS = [
     "django.contrib.admin",
