@@ -129,9 +129,6 @@ RQ_QUEUES = {
         "URL": os.getenv("REDISCLOUD_URL"),
         "DEFAULT_TIMEOUT": 900,
         "ASYNC": True,
-        "REDIS_CLIENT_KWARGS": {
-            "decode_responses": True
-        },
     }
 }
 
