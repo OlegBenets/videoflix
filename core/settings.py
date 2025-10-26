@@ -58,6 +58,11 @@ if DEBUG:
 else:
     FRONTEND_URL = "https://videoflix.oleg-benets.dev"
     
+if DEBUG:
+    BASE_URL = "http://127.0.0.1:8000"
+else:
+    BASE_URL = "https://videoflix-stage-8babf0a27cf2.herokuapp.com"
+    
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
