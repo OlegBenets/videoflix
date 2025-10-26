@@ -33,7 +33,12 @@ ALLOWED_HOSTS = [host.strip() for host in os.getenv(
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv(
     "CSRF_TRUSTED_ORIGINS",
-    "https://videoflix.oleg-benets.dev,http://localhost:4200"
+    "http://localhost:4200"
+).split(",")]
+
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:4200"
 ).split(",")]
 
 CORS_ALLOW_CREDENTIALS = True
