@@ -80,3 +80,19 @@ def convert_video_into_hls(input_file, video_id):
 
     for resolution, scale in RESOLUTION_MAP.items():
         convert_video_into_specific_resolution(resolution, scale, input_file, video_id)
+
+
+def generate_thumbnail_if_missing(video):
+    """
+    Check if thumbnail exists; if not, generate it.
+    """
+    try:
+        thumbnail_path = os.path.join(settings.MEDIA_ROOT, "thumbnails", f"{video.id}.jpg")
+
+        if not os.path.exists(thumbnail_path):
+            logger.info(f"Thumbnail missing for video {video.id}, regenerating...")
+            generate_thumbnail(video.id)
+        else:
+            logger.debug(f"Thumbnail for video {video.id} already exists.")
+    except Exception as e:
+        logger.error(f"Error while checking/generating thumbnail for video {video.id}: {e}")

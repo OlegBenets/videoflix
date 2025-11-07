@@ -53,16 +53,9 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", default="noreply@videoflix.local"
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 
-if DEBUG:
-    FRONTEND_URL = "http://127.0.0.1:5500"
-else:
-    FRONTEND_URL = "https://videoflix.oleg-benets.dev"
-    
-if DEBUG:
-    BASE_URL = "http://127.0.0.1:8000"
-else:
-    BASE_URL = "https://videoflix-stage-8babf0a27cf2.herokuapp.com"
-    
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://127.0.0.1:5500")
+BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
