@@ -21,12 +21,15 @@ def video_post_save(sender, instance, created, **kwargs):
     if created and instance.file:
         queue = django_rq.get_queue("default", autocommit=True)
         tasks = [
-            (convert_video_into_hls, (instance.file.path, instance.id)),
             (generate_thumbnail, (instance.id,)),
+            (convert_video_into_hls, (instance.file.path, instance.id)),
         ]
         for func, args in tasks:
-            queue.enqueue(func, *args)
-            logger.info(f"Enqueued task {func.__name__} for video id={instance.id}")
+            try:
+                queue.enqueue(func, *args)
+                logger.info(f"Enqueued task {func.__name__} for video id={instance.id}")
+            except Exception as e:
+                logger.error(f"Failed to enqueue {func.__name__} for video id={instance.id}: {e}")
 
 
 @receiver(post_delete, sender=Video)
