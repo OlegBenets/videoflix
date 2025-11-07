@@ -52,6 +52,11 @@ def convert_video_into_hls(video_id):
             resource_type="video",
             format="hls",
             public_id="index",
+            transformation=[
+                {"width": 480, "crop": "scale"},
+                {"width": 720, "crop": "scale"},
+                {"width": 1080, "crop": "scale"}
+            ],
             overwrite=True
         )
 
