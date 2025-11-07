@@ -11,7 +11,7 @@ class Video(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=256)
     description = models.CharField(max_length=256)
-    file = CloudinaryField(resource_type="video", folder="videoflix/videos/")
+    file = CloudinaryField(resource_type="video", folder="videoflix/videos/", blank=True, null=True)
     thumbnail_url = models.URLField(max_length=500, blank=True, null=True)
     category = models.CharField(max_length=256, default="Uncategorized")
 
