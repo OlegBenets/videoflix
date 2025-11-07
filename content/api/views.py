@@ -4,30 +4,25 @@ from rest_framework.views import APIView
 from .serializers import VideoSerializer
 from rest_framework import generics
 from content.models import Video
-from django.conf import settings
-import os
-
 
 class VideosListView(generics.ListAPIView):
-    """
-    View to list all videos.
-    """
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
 
 
 class VideoHLSPlaylistView(APIView):
     """
-    Stream HLS playlist from Cloudinary, keeping original URLs for frontend.
+    Proxy HLS playlist from Cloudinary using the old API URL.
     """
 
     def get(self, request, movie_id, resolution):
         try:
             video = Video.objects.get(id=movie_id)
 
-            cloudinary_base_url = f"https://res.cloudinary.com/docbhvsjl/video/upload/vod/videos/{video.id}/{resolution}/index.m3u8"
+            cloudinary_hls_url = str(video.file)
+            cloudinary_hls_url = cloudinary_hls_url.replace("/upload/", "/upload/v_hls/")
 
-            r = requests.get(cloudinary_base_url, timeout=10)
+            r = requests.get(cloudinary_hls_url, timeout=10)
             if r.status_code != 200:
                 raise Http404("Playlist not found on Cloudinary")
 
@@ -41,16 +36,18 @@ class VideoHLSPlaylistView(APIView):
             raise Http404("Video not found")
 
 
-
 class GetVideoHLSSegment(APIView):
     """
-    Stream a HLS segment from Cloudinary.
+    Proxy HLS segment from Cloudinary.
     """
 
     def get(self, request, movie_id, resolution, segment):
         try:
-            cloudinary_segment_url = f"https://res.cloudinary.com/docbhvsjl/video/upload/vod/videos/{movie_id}/{resolution}/{segment}"
-            r = requests.get(cloudinary_segment_url, timeout=10)
+            video = Video.objects.get(id=movie_id)
+            cloudinary_base_url = str(video.file).replace("/upload/", "/upload/v_hls/")
+            segment_url = f"{cloudinary_base_url}/{segment}"
+
+            r = requests.get(segment_url, timeout=10)
             if r.status_code != 200:
                 raise Http404("Segment not found on Cloudinary")
 
