@@ -1,9 +1,10 @@
 from django.http import Http404, HttpResponse
-import requests
 from rest_framework.views import APIView
 from .serializers import VideoSerializer
 from rest_framework import generics
 from content.models import Video
+import requests
+import cloudinary
 
 class VideosListView(generics.ListAPIView):
     queryset = Video.objects.all()
@@ -12,17 +13,15 @@ class VideosListView(generics.ListAPIView):
 
 class VideoHLSPlaylistView(APIView):
     """
-    Proxy HLS playlist from Cloudinary using the old API URL.
+    Proxy for Cloudinary HLS playlist.
     """
 
     def get(self, request, movie_id, resolution):
         try:
             video = Video.objects.get(id=movie_id)
+            cloudinary_url = f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/video/upload/vod/videoflix/videos/{video.id}/{resolution}/index.m3u8"
 
-            cloudinary_hls_url = str(video.file)
-            cloudinary_hls_url = cloudinary_hls_url.replace("/upload/", "/upload/v_hls/")
-
-            r = requests.get(cloudinary_hls_url, timeout=10)
+            r = requests.get(cloudinary_url, timeout=10)
             if r.status_code != 200:
                 raise Http404("Playlist not found on Cloudinary")
 
@@ -38,16 +37,13 @@ class VideoHLSPlaylistView(APIView):
 
 class GetVideoHLSSegment(APIView):
     """
-    Proxy HLS segment from Cloudinary.
+    Proxy for HLS segments from Cloudinary.
     """
 
     def get(self, request, movie_id, resolution, segment):
         try:
-            video = Video.objects.get(id=movie_id)
-            cloudinary_base_url = str(video.file).replace("/upload/", "/upload/v_hls/")
-            segment_url = f"{cloudinary_base_url}/{segment}"
-
-            r = requests.get(segment_url, timeout=10)
+            cloudinary_url = f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/video/upload/vod/videoflix/videos/{movie_id}/{resolution}/{segment}"
+            r = requests.get(cloudinary_url, timeout=10)
             if r.status_code != 200:
                 raise Http404("Segment not found on Cloudinary")
 
@@ -57,5 +53,5 @@ class GetVideoHLSSegment(APIView):
                 status=200
             )
 
-        except Video.DoesNotExist:
-            raise Http404("Video not found")
+        except Exception:
+            raise Http404("Segment not found")
