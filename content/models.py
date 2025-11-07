@@ -1,4 +1,5 @@
 from django.db import models
+from cloudinary.models import CloudinaryField
 
 # Create your models here.
 
@@ -10,7 +11,7 @@ class Video(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=256)
     description = models.CharField(max_length=256)
-    file = models.FileField(upload_to="videos/", blank=True, null=True)
+    file = CloudinaryField(resource_type="video", folder="videoflix/videos/")
     thumbnail_url = models.URLField(max_length=500, blank=True, null=True)
     category = models.CharField(max_length=256, default="Uncategorized")
 

@@ -1,9 +1,13 @@
 asgiref==3.8.1
 black==25.1.0
+certifi==2025.10.5
+charset-normalizer==3.4.4
 click==8.2.1
+cloudinary==1.44.1
 colorama==0.4.6
 dj-database-url==3.0.1
 Django==5.2.4
+django-cloudinary-storage==0.3.0
 django-cors-headers==4.7.0
 django-debug-toolbar==6.0.0
 django-environ==0.12.0
@@ -16,6 +20,7 @@ ffmpeg-python==0.2.0
 flake8==7.3.0
 future==1.0.0
 gunicorn==23.0.0
+idna==3.11
 mccabe==0.7.0
 mypy_extensions==1.1.0
 packaging==25.0
@@ -27,8 +32,12 @@ pycodestyle==2.14.0
 pyflakes==3.4.0
 PyJWT==2.9.0
 python-dotenv==1.1.1
+python-magic==0.4.27
 redis==6.2.0
+requests==2.32.5
 rq==2.4.0
+six==1.17.0
 sqlparse==0.5.3
 tzdata==2025.2
+urllib3==2.5.0
 whitenoise==6.9.0

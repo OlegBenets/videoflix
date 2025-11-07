@@ -1,98 +1,44 @@
 import subprocess
-import os
+import tempfile
 import logging
-from django.conf import settings
+import cloudinary.uploader
 from .models import Video
 
 logger = logging.getLogger(__name__)
 
 def generate_thumbnail(video_id):
     """
-    Generate a thumbnail for the video.
+    Generate and upload a thumbnail to Cloudinary.
     """
     try:
         video = Video.objects.get(id=video_id)
-        input_path = video.file.path
+        input_url = video.file.url
 
-        output_dir = os.path.join(settings.MEDIA_ROOT, "thumbnails")
-        os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, f"{video.id}.jpg")
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp_file:
+            cmd = [
+                "ffmpeg",
+                "-ss", "00:00:05.000",
+                "-i", input_url,
+                "-vframes", "1",
+                "-q:v", "2",
+                tmp_file.name,
+                "-y"
+            ]
+            subprocess.run(cmd, check=True)
 
-        cmd = [
-            "ffmpeg",
-            "-ss", "00:00:05.000",
-            "-i", input_path,
-            "-vframes", "1",
-            "-q:v", "2",
-            output_path,
-            "-y", 
-        ]
+            upload_result = cloudinary.uploader.upload(
+                tmp_file.name,
+                folder="videoflix/thumbnails/",
+                resource_type="image"
+            )
 
-        subprocess.run(cmd, check=True)
-        video.thumbnail_url = f"{settings.BASE_URL}{settings.MEDIA_URL}thumbnails/{video.id}.jpg"
+        video.thumbnail_url = upload_result["secure_url"]
         video.save()
-        logger.info(f"Thumbnail generated for video id={video_id}")
+        logger.info(f"Thumbnail generated and uploaded for video id={video_id}")
 
     except Video.DoesNotExist:
         logger.error(f"Video with id={video_id} does not exist")
     except subprocess.CalledProcessError as e:
         logger.error(f"FFmpeg failed for video id={video_id}: {e}")
-
-
-def convert_video_into_specific_resolution(resolution, scale, input_file, video_id):
-    """
-    Convert video into a specific resolution.
-    """
-    try:
-        output_dir = os.path.join(settings.MEDIA_ROOT, "videos", str(video_id), resolution)
-        os.makedirs(output_dir, exist_ok=True)
-        output_file = os.path.join(output_dir, "index.m3u8")
-
-        cmd = [
-            "ffmpeg",
-            "-i", input_file,
-            "-vf", f"scale={scale}",
-            "-c:v", "h264",
-            "-c:a", "aac",
-            "-f", "hls",
-            "-hls_time", "10",
-            "-hls_playlist_type", "vod",
-            output_file,
-            "-y",
-        ]
-
-        subprocess.run(cmd, check=True)
-        logger.info(f"Video converted to {resolution} for video id={video_id}")
-
-    except subprocess.CalledProcessError as e:
-        logger.error(f"FFmpeg conversion failed for video id={video_id}, resolution={resolution}: {e}")
-
-
-def convert_video_into_hls(input_file, video_id):
-    """
-    Convert video into HLS format.
-    """
-    RESOLUTION_MAP = {
-        "480p": "854:480",
-        "720p": "1280:720",
-        "1080p": "1920:1080",
-    }
-
-    for resolution, scale in RESOLUTION_MAP.items():
-        convert_video_into_specific_resolution(resolution, scale, input_file, video_id)
-
-
-def generate_thumbnail_if_missing(video):
-    """
-    Check if thumbnail exists; if not, generate it.
-    """
-    try:
-        thumbnail_path = os.path.join(settings.MEDIA_ROOT, "thumbnails", f"{video.id}.jpg")
-
-        if not os.path.exists(thumbnail_path):
-            logger.info(f"Thumbnail missing for video {video.id}, regenerating...")
-            generate_thumbnail(video.id)
-        else:
-            logger.debug(f"Thumbnail for video {video.id} already exists.")
     except Exception as e:
-        logger.error(f"Error while checking/generating thumbnail for video {video.id}: {e}")
+        logger.error(f"Error generating thumbnail for video id={video_id}: {e}")
