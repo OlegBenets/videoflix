@@ -1,53 +1,61 @@
-import requests
 from django.http import Http404, HttpResponse
 from rest_framework.views import APIView
-from rest_framework import generics
 from .serializers import VideoSerializer
+from rest_framework import generics
 from content.models import Video
-import cloudinary
+from django.conf import settings
+import os
+
 
 class VideosListView(generics.ListAPIView):
+    """
+    View to list all videos.
+    """
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
 
 
 class VideoHLSPlaylistView(APIView):
+    """
+    View to stream HLS playlist for a video.
+    """
     def get(self, request, movie_id, resolution):
-        try:
-            Video.objects.get(id=movie_id)
-            cloud_url = (
-                f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/"
-                f"video/upload/videoflix/videos/{movie_id}/{resolution}/index.m3u8"
-            )
 
-            r = requests.get(cloud_url, timeout=10)
-            if r.status_code != 200:
-                raise Http404(f"Playlist not found for {resolution}")
+        index_m3u8_path = os.path.join(
+            settings.MEDIA_ROOT, "videos", str(movie_id), resolution, "index.m3u8"
+        )
 
-            return HttpResponse(r.content, content_type="application/vnd.apple.mpegurl")
+        if not os.path.exists(index_m3u8_path):
+            raise Http404("Playlist not found")
 
-        except Video.DoesNotExist:
-            raise Http404("Video not found")
-        except Exception as e:
-            raise Http404(f"Error loading playlist: {e}")
+        with open(index_m3u8_path, "r") as f:
+            playlist_content = f.read()
+
+        return HttpResponse(
+            playlist_content, 
+            content_type="application/vnd.apple.mpegurl",
+            status=200
+        )
 
 
 class GetVideoHLSSegment(APIView):
+    """
+    View to stream a specific HLS segment for a video.
+    """
+
     def get(self, request, movie_id, resolution, segment):
-        try:
-            Video.objects.get(id=movie_id)
-            cloud_url = (
-                f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/"
-                f"video/upload/videoflix/videos/{movie_id}/{resolution}/{segment}"
-            )
+        segment_path = os.path.join(
+            settings.MEDIA_ROOT, "videos", str(movie_id), resolution, segment
+        )
 
-            r = requests.get(cloud_url, timeout=10)
-            if r.status_code != 200:
-                raise Http404(f"Segment not found for {resolution}")
+        if not os.path.exists(segment_path):
+            raise Http404("Segment not found")
 
-            return HttpResponse(r.content, content_type="video/mp2t")
+        with open(segment_path, "rb") as f:
+            segment_file = f.read()
 
-        except Video.DoesNotExist:
-            raise Http404("Video not found")
-        except Exception as e:
-            raise Http404(f"Error loading segment: {e}")
+        return HttpResponse(
+            segment_file, 
+            content_type="video/mp2t",
+            status=200
+        )

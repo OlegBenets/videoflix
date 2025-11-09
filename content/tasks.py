@@ -1,16 +1,14 @@
 import subprocess
-import tempfile
+import os
 import logging
-import cloudinary.uploader
+from django.conf import settings
 from .models import Video
+import cloudinary.uploader
+import requests
+import tempfile
+
 
 logger = logging.getLogger(__name__)
-
-RESOLUTIONS = {
-    "480p": 854,
-    "720p": 1280,
-    "1080p": 1920,
-}
 
 
 def generate_thumbnail(video_id):
@@ -53,33 +51,69 @@ def generate_thumbnail(video_id):
         logger.error(f"Error generating thumbnail for video id={video_id}: {e}")
 
 
-def convert_video_into_hls(video_id):
+def convert_video_from_cloudinary(video_id):
     """
-    Upload video to Cloudinary and generate HLS streams for multiple resolutions.
+    Download the video from Cloudinary and convert it into HLS locally.
     """
     try:
         video = Video.objects.get(id=video_id)
         input_url = video.file.url
 
-        eager_transformations = []
-        for res, width in RESOLUTIONS.items():
-            eager_transformations.append({
-                "format": "m3u8",
-                "transformation": {"width": width, "crop": "scale"}
-            })
+        with tempfile.NamedTemporaryFile(suffix=".mp4") as tmp_video:
+            r = requests.get(input_url, stream=True)
+            r.raise_for_status()
+            for chunk in r.iter_content(chunk_size=8192):
+                tmp_video.write(chunk)
+            tmp_video.flush()  
 
-        upload_result = cloudinary.uploader.upload(
-            input_url,
-            folder=f"videoflix/videos/{video.id}/",
-            resource_type="video",
-            eager=eager_transformations,
-            eager_async=True
-        )
-
-        logger.info(f"HLS variants triggered for video id={video_id}")
-        return upload_result
+            convert_video_into_hls(tmp_video.name, video_id)
 
     except Video.DoesNotExist:
         logger.error(f"Video {video_id} does not exist")
+    except requests.RequestException as e:
+        logger.error(f"Failed to download video {video_id} from Cloudinary: {e}")
     except Exception as e:
-        logger.error(f"Error uploading HLS for video {video_id}: {e}")
+        logger.error(f"Error converting video {video_id} to HLS: {e}")
+
+
+def convert_video_into_specific_resolution(resolution, scale, input_file, video_id):
+    """
+    Convert video into a specific resolution.
+    """
+    try:
+        output_dir = os.path.join(settings.MEDIA_ROOT, "videos", str(video_id), resolution)
+        os.makedirs(output_dir, exist_ok=True)
+        output_file = os.path.join(output_dir, "index.m3u8")
+
+        cmd = [
+            "ffmpeg",
+            "-i", input_file,
+            "-vf", f"scale={scale}",
+            "-c:v", "h264",
+            "-c:a", "aac",
+            "-f", "hls",
+            "-hls_time", "10",
+            "-hls_playlist_type", "vod",
+            output_file,
+            "-y",
+        ]
+
+        subprocess.run(cmd, check=True)
+        logger.info(f"Video converted to {resolution} for video id={video_id}")
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"FFmpeg conversion failed for video id={video_id}, resolution={resolution}: {e}")
+
+
+def convert_video_into_hls(input_file, video_id):
+    """
+    Convert video into HLS format.
+    """
+    RESOLUTION_MAP = {
+        "480p": "854:480",
+        "720p": "1280:720",
+        "1080p": "1920:1080",
+    }
+
+    for resolution, scale in RESOLUTION_MAP.items():
+        convert_video_into_specific_resolution(resolution, scale, input_file, video_id)
