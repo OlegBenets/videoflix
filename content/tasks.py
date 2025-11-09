@@ -1,12 +1,24 @@
 import subprocess
 import tempfile
 import logging
+import os
 import cloudinary.uploader
+import glob
 from .models import Video
+
 logger = logging.getLogger(__name__)
+
+RESOLUTIONS = {
+    "480p": "854:480",
+    "720p": "1280:720",
+    "1080p": "1920:1080",
+}
 
 
 def generate_thumbnail(video_id):
+    """
+    Generate a thumbnail (5s in) and upload to Cloudinary.
+    """
     try:
         video = Video.objects.get(id=video_id)
         input_url = video.file.url
@@ -19,19 +31,20 @@ def generate_thumbnail(video_id):
                 "-vframes", "1",
                 "-q:v", "2",
                 tmp_file.name,
-                "-y"
+                "-y",
             ]
             subprocess.run(cmd, check=True)
 
             upload_result = cloudinary.uploader.upload(
                 tmp_file.name,
                 folder="videoflix/thumbnails/",
-                resource_type="image"
+                resource_type="image",
+                overwrite=True,
             )
 
         video.thumbnail_url = upload_result["secure_url"]
         video.save()
-        logger.info(f"Thumbnail generated and uploaded for video id={video_id}")
+        logger.info(f"Thumbnail generated for video id={video_id}")
 
     except Video.DoesNotExist:
         logger.error(f"Video with id={video_id} does not exist")
@@ -42,28 +55,47 @@ def generate_thumbnail(video_id):
 
 
 def convert_video_into_hls(video_id):
+    """
+    Convert video into HLS format in multiple resolutions and upload to Cloudinary.
+    """
     try:
         video = Video.objects.get(id=video_id)
         input_url = video.file.url
+        logger.info(f"Starting HLS conversion for video id={video_id}")
 
-        upload_result = cloudinary.uploader.upload(
-            input_url,
-            folder=f"videoflix/videos/{video.id}/",
-            resource_type="video",
-            format="hls",
-            public_id="index",
-            transformation=[
-                {"width": 480, "crop": "scale"},
-                {"width": 720, "crop": "scale"},
-                {"width": 1080, "crop": "scale"}
-            ],
-            overwrite=True
-        )
+        for resolution, scale in RESOLUTIONS.items():
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                output_file = os.path.join(tmp_dir, "index.m3u8")
 
-        logger.info(f"Video converted to HLS and uploaded for video id={video_id}")
-        logger.info(f"HLS Playlist URL: {upload_result['secure_url']}")
+                cmd = [
+                    "ffmpeg",
+                    "-i", input_url,
+                    "-vf", f"scale={scale}",
+                    "-c:v", "h264",
+                    "-c:a", "aac",
+                    "-f", "hls",
+                    "-hls_time", "10",
+                    "-hls_playlist_type", "vod",
+                    output_file,
+                    "-y",
+                ]
+                subprocess.run(cmd, check=True)
+
+                for f in glob.glob(f"{tmp_dir}/*"):
+                    cloudinary.uploader.upload(
+                        f,
+                        folder=f"videoflix/videos/{video.id}/{resolution}/",
+                        resource_type="video",
+                        overwrite=True,
+                    )
+
+                logger.info(f"Uploaded {resolution} version for video id={video_id}")
+
+        logger.info(f"Finished all resolutions for video id={video_id}")
 
     except Video.DoesNotExist:
         logger.error(f"Video with id={video_id} does not exist")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"FFmpeg failed for video id={video_id}: {e}")
     except Exception as e:
-        logger.error(f"HLS conversion/upload failed for video id={video_id}: {e}")
+        logger.error(f"Error during HLS conversion for video id={video_id}: {e}")

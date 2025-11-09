@@ -15,28 +15,43 @@ class VideosListView(generics.ListAPIView):
 class VideoHLSPlaylistView(APIView):
     def get(self, request, movie_id, resolution):
         try:
-            video = Video.objects.get(id=movie_id)
-            public_id = video.file.public_id  
-            cloud_url = f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/video/upload/vod/{public_id}/index.m3u8"
+
+            Video.objects.get(id=movie_id)
+
+            cloud_url = (
+                f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/"
+                f"video/upload/videoflix/videos/{movie_id}/{resolution}/index.m3u8"
+            )
+
             r = requests.get(cloud_url, timeout=10)
             if r.status_code != 200:
-                raise Http404("Playlist not found")
+                raise Http404(f"Playlist not found for {resolution}")
+
             return HttpResponse(r.content, content_type="application/vnd.apple.mpegurl")
+
         except Video.DoesNotExist:
             raise Http404("Video not found")
+        except Exception as e:
+            raise Http404(f"Error loading playlist: {e}")
 
 
 class GetVideoHLSSegment(APIView):
     def get(self, request, movie_id, resolution, segment):
         try:
-            video = Video.objects.get(id=movie_id)
-            public_id = video.file.public_id
-            cloud_url = f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/video/upload/vod/{public_id}/{segment}"
+            Video.objects.get(id=movie_id)
+
+            cloud_url = (
+                f"https://res.cloudinary.com/{cloudinary.config().cloud_name}/"
+                f"video/upload/videoflix/videos/{movie_id}/{resolution}/{segment}"
+            )
+
             r = requests.get(cloud_url, timeout=10)
             if r.status_code != 200:
-                raise Http404("Segment not found")
+                raise Http404(f"Segment not found for {resolution}")
+
             return HttpResponse(r.content, content_type="video/mp2t")
+
         except Video.DoesNotExist:
             raise Http404("Video not found")
-        except Exception:
-            raise Http404("Segment not found")
+        except Exception as e:
+            raise Http404(f"Error loading segment: {e}")
