@@ -117,7 +117,3 @@ def convert_video_into_hls(input_file, video_id):
 
     for resolution, scale in RESOLUTION_MAP.items():
         convert_video_into_specific_resolution(resolution, scale, input_file, video_id)
-
-    video = Video.objects.get(id=video_id)
-    video.hls_generated = True
-    video.save(update_fields=['hls_generated'])

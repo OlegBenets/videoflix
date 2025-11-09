@@ -18,7 +18,7 @@ def video_post_save(sender, instance, created, **kwargs):
     Enqueue video processing tasks (HLS conversion, thumbnail generation)
     after a new Video instance is created.
     """
-    if instance.file and not instance.hls_generated:
+    if created and instance.file:
         queue = django_rq.get_queue("default", autocommit=True)
         tasks = [
             (generate_thumbnail, (instance.id,)),
