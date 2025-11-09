@@ -6,6 +6,12 @@ from .models import Video
 
 logger = logging.getLogger(__name__)
 
+RESOLUTIONS = {
+    "480p": 854,
+    "720p": 1280,
+    "1080p": 1920,
+}
+
 
 def generate_thumbnail(video_id):
     """
@@ -49,29 +55,31 @@ def generate_thumbnail(video_id):
 
 def convert_video_into_hls(video_id):
     """
-    Use Cloudinary eager transformations to generate HLS variants.
+    Upload video to Cloudinary and generate HLS streams for multiple resolutions.
     """
     try:
         video = Video.objects.get(id=video_id)
         input_url = video.file.url
-        logger.info(f"Starting Cloudinary HLS conversion for video id={video_id}")
+
+        eager_transformations = []
+        for res, width in RESOLUTIONS.items():
+            eager_transformations.append({
+                "format": "m3u8",
+                "transformation": {"width": width, "crop": "scale"}
+            })
 
         upload_result = cloudinary.uploader.upload(
             input_url,
             folder=f"videoflix/videos/{video.id}/",
             resource_type="video",
-            eager=[
-                {"format": "m3u8", "transformation": {"width": 854, "crop": "scale"}},   
-                {"format": "m3u8", "transformation": {"width": 1280, "crop": "scale"}},  
-                {"format": "m3u8", "transformation": {"width": 1920, "crop": "scale"}},  
-            ],
-            eager_async=True,
+            eager=eager_transformations,
+            eager_async=True
         )
 
-        logger.info(f"Cloudinary HLS conversion triggered for video id={video_id}")
+        logger.info(f"HLS variants triggered for video id={video_id}")
         return upload_result
 
     except Video.DoesNotExist:
-        logger.error(f"Video with id={video_id} does not exist")
+        logger.error(f"Video {video_id} does not exist")
     except Exception as e:
-        logger.error(f"Error during Cloudinary HLS conversion for video id={video_id}: {e}")
+        logger.error(f"Error uploading HLS for video {video_id}: {e}")
