@@ -30,23 +30,3 @@ def video_post_save(sender, instance, created, **kwargs):
                 logger.info(f"Enqueued task {func.__name__} for video id={instance.id}")
             except Exception as e:
                 logger.error(f"Failed to enqueue {func.__name__} for video id={instance.id}: {e}")
-
-
-@receiver(post_delete, sender=Video)
-def auto_delete_file_on_delete(sender, instance, **kwargs):
-    """
-    Deletes the video file and thumbnail from the filesystem
-    when the corresponding Video object is deleted.
-    """
-    if not instance.file:
-        return
-
-    paths_to_delete = [
-        instance.file.path,
-        os.path.join(settings.MEDIA_ROOT, "thumbnails", f"{instance.id}.jpg")
-    ]
-
-    for path in paths_to_delete:
-        if os.path.exists(path):
-            os.remove(path)
-            logger.info(f"Deleted file {path}")
