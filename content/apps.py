@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 import logging
-import os 
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,6 @@ class ContentConfig(AppConfig):
         if os.environ.get("DYNO") and os.environ.get("DYNO").startswith("web"):
             from .models import Video
             import django_rq
-            import os
             from django.conf import settings
             from .tasks import convert_video_from_cloudinary
 
