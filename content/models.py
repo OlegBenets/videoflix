@@ -12,6 +12,7 @@ class Video(models.Model):
     file = CloudinaryField(resource_type="video", folder="videoflix/videos/", blank=True, null=True)
     thumbnail_url = models.URLField(max_length=500, blank=True, null=True)
     category = models.CharField(max_length=256, default="Uncategorized")
-
+    hls_generated = models.BooleanField(default=False)  
+    
     def __str__(self):
         return self.title
